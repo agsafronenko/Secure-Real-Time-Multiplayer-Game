@@ -19,11 +19,17 @@
     </header>
     <hr style="margin: 25px" />
     <div class="container">
+      <div id="controls">
+        <span>Controls: ↑ ↓ ← →</span>
+        <span style="font-size: 24px; text-align: center;">Coins Race</span>
+        <span id="rank-info" style="float: right;">Rank: 0/0</span>
+      </div>
       <canvas 
         ref="game"
         id="game-window" 
         width="640" 
         height="480"
+        style="background-color: gray;"
       >
       </canvas>
     </div>
