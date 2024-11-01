@@ -1,13 +1,19 @@
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
-const expect = require('chai');
 const socket = require('socket.io');
 const cors = require('cors');
 const helmet = require('helmet');
 
 const fccTestingRoutes = require('./routes/fcctesting.js');
 const runner = require('./test-runner.js');
+
+const CANVAS_WIDTH = 640;
+const CANVAS_HEIGHT = 480;
+const COLLECTIBLE_WIDTH = 32;
+const COLLECTIBLE_HEIGHT = 32;
+const NUMBER_COLLECTIBLES = 5
+const POINTS = {GOLD: 5, SILVER: 3, BRONZE: 1}
 
 const app = express();
 
@@ -64,111 +70,82 @@ const server = app.listen(portNum, () => {
 
 const io = socket(server);
 const players = {};
+let collectibles = [];
 
-function calculateRanks() {
-  const playerArray = Object.keys(players).map(id => ({
+
+// Function to create ranks for players
+function createRanks() {
+  return Object.keys(players).map(id => ({
     id,
     score: players[id].score
   }));
-
-  playerArray.sort((a, b) => b.score - a.score); // Sort players by score
-
-  return playerArray.map((player, index) => ({
-    id: player.id,
-    rank: index + 1,
-    score: player.score
-  }));
 }
 
-let collectibles = [];
-
-// NEW: Function to create collectibles on the server
+// Function to create collectibles on the server
 function createCollectible() {
-  const x = Math.random() * 640;
-  const y = Math.random() * 480;
-  const value = ['bronze', 'silver', 'gold'][Math.floor(Math.random() * 3)];
+  const x = Math.random() * CANVAS_WIDTH;
+  const y = Math.random() * CANVAS_HEIGHT;
+  const value = Object.keys(POINTS)[Math.floor(Math.random() * Object.keys(POINTS).length)];
   const id = collectibles.length + 1; 
-  collectibles.push({ x, y, value, id, width: 32, height: 32 });
-  io.emit('updateCollectibles', collectibles); // Sync collectibles across clients
+  collectibles.push({ x, y, value, id, width: COLLECTIBLE_WIDTH, height: COLLECTIBLE_HEIGHT });
+  io.emit('updateCollectibles', collectibles);
 }
 
-// Initialize a few collectibles at the start
-for (let i = 0; i < 5; i++) {
+// Initialize collectibles at the start
+for (let i = 0; i < NUMBER_COLLECTIBLES; i++) {
   createCollectible();
 }
 
-
-
-
-
-// Collision detection function
+// Collision detection function to check if a player has collided with a collectible
 function checkCollision(player, collectible) {
   return (
     player.x < collectible.x + collectible.width &&
-    player.x + 32 > collectible.x &&
+    player.x + COLLECTIBLE_WIDTH > collectible.x &&
     player.y < collectible.y + collectible.height &&
-    player.y + 32 > collectible.y
+    player.y + COLLECTIBLE_HEIGHT > collectible.y
   );
 }
 
-
-
-
+// Socket.io connection event for new players
 io.on('connection', (socket) => {
-  console.log(`New player connected: ${socket.id}`);
-
-  // If player already exists, retrieve their previous state
   if (!players[socket.id]) {
-    players[socket.id] = { x: Math.random() * 640, y: Math.random() * 480, score: 0 };
+    players[socket.id] = { x: Math.random() * CANVAS_WIDTH, y: Math.random() * CANVAS_HEIGHT, score: 0 };
   }
-
+  // Emit the current state of players and collectibles to all clients
   io.emit('updatePlayers', players);
-  const ranks = calculateRanks(); // Get the initial ranks
-  io.emit('updateRanks', ranks); 
-  console.log("list_of_players: ", players)
+  io.emit('updateRanks', createRanks()); 
   socket.emit('updateCollectibles', collectibles);
 
+  // Listen for player movement updates
   socket.on('playerMovement', (data) => {
-
-    // Update player position and score
     if (players[socket.id]) {
         players[socket.id].x = data.x;
         players[socket.id].y = data.y;
     
-
-
     // Check for collisions with each collectible
     collectibles.forEach((collectible, index) => {
       if (checkCollision(players[socket.id], collectible)) {
-        players[socket.id].score += collectible.value === 'gold' ? 10 : collectible.value === 'silver' ? 5 : 1;
-        
+         // Update player score based on collectible value
+        players[socket.id].score += collectible.value === 'GOLD' ? POINTS.GOLD : collectible.value === 'SILVER' ? POINTS.SILVER : POINTS.BRONZE;
         // Remove collectible from array and create a new one
         collectibles.splice(index, 1);
         createCollectible();
         
         // Emit updated data after a collectible is collected
-
-        const ranks = calculateRanks();
         io.emit('updatePlayers', players);
         io.emit('updateCollectibles', collectibles);
-        io.emit('updateRanks', ranks); // Emit the new ranks
+        io.emit('updateRanks', createRanks());
       }
     })
   }
-
-
-
   });
 
+  // Listen for player disconnection events
   socket.on('disconnect', () => {
-    console.log(`Player disconnected: ${socket.id}`);
     delete players[socket.id];
     io.emit('updatePlayers', players);
-    const ranks = calculateRanks();
-    io.emit('updateRanks', ranks)
+    io.emit('updateRanks', createRanks())
   });
 });
-
-
 
 module.exports = app; // For testing
