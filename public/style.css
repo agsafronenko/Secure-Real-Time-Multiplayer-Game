@@ -1,59 +1,64 @@
 body {
-  margin: 20px;
+  font-family: 'Press Start 2P', cursive;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #222; 
+  color: white; 
 }
 
-code {
-  background: #0b0baf;
-}
-
-canvas {
-  margin: auto;
+header {
+  text-align: center;
+  background: linear-gradient(90deg, #444, #666);
+  padding: 0 2vw;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
 }
 
 .container {
   display: flex;
   flex-direction: column;
-}
-
-@media (min-width: 800px) {
-  .container {
-    flex-direction: row;
-  }
-}
-
-
-/* body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  display: flex;
-  flex-direction: column;
   align-items: center;
-} */
+  border: 5px solid #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
 
-#control-bar {
+#head-panel {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 50%;
   background-color: #333;
   color: white;
-  padding: 10px;
-  position: absolute;
-  top: 0;
+  padding: 10px 0;
+  width: 100%;
+}
+
+#head-panel span {
+  flex: 20px; 
+  text-align: center;
 }
 
 #controls {
-  flex: 1;
+  font-size: 16px;
 }
 
 #title {
-  flex: 2;
-  text-align: center;
   font-size: 24px;
-  font-weight: bold;
 }
 
-#rank {
-  flex: 1;
-  text-align: right;
+#rank-info {
+  font-size: 16px;
+}
+
+canvas {
+  margin: 0px auto;
+  background-color: #e7b1b1; 
+}
+
+
+@media (max-width: 600px) {
+  #controls-container {
+      width: 100%; 
+  }
 }
