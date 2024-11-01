@@ -47,11 +47,16 @@ socket.on('updatePlayers', (playerData) => {
 
 let rankInfo = document.getElementById('rank-info'); 
 
+// socket.on('updateRanks', (ranks) => {
+//   const playerRank = ranks.find(player => player.id === socket.id);
+//   if (playerRank) {
+//     rankInfo.textContent = `Rank: ${playerRank.rank}/${ranks.length}`;
+//   }
+// });
+
 socket.on('updateRanks', (ranks) => {
-  const playerRank = ranks.find(player => player.id === socket.id);
-  if (playerRank) {
-    rankInfo.textContent = `Rank: ${playerRank.rank}/${ranks.length}`;
-  }
+  const playerRank = players[socket.id].calculateRank(ranks);
+  rankInfo.textContent = playerRank; // Display the player's rank
 });
 
 

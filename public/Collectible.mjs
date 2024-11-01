@@ -6,8 +6,14 @@ class Collectible {
     this.id = id;
     this.width = 32;
     this.height = 32;
-    this.img = new Image();
-    this.img.src = `assets/${this.value}-coin.png`;
+    // this.img = new Image();
+    // this.img.src = `assets/${this.value}-coin.png`;
+    if (typeof Image !== 'undefined') {  // Check if 'Image' is defined
+      this.img = new Image();
+      this.img.src = `assets/${this.value}-coin.png`;
+    } else {
+      this.img = null;  // Set to null in non-browser environments
+    }
   }
   
   draw(context) {
@@ -21,7 +27,6 @@ class Collectible {
   }
 }
 
-// check the following block of code
 try {
   module.exports = Collectible;
 } catch(e) {}
